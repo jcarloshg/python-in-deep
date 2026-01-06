@@ -22,13 +22,16 @@ except ImportError:
     asizeof = None
     pympler_available = False
 
+
 class StandardCoordinate:
     """Standard, flexible Python class. Each instance has a __dict__ and can have new attributes attached dynamically."""
+
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
         # Demonstrating attribute flexibility (no __slots__):
         # self.z = 123  # Would work
+
 
 class OptimizedCoordinate:
     """
@@ -38,6 +41,7 @@ class OptimizedCoordinate:
     Behaves more like a C struct or TS Interface (hidden class in V8).
     """
     __slots__ = ('x', 'y')
+
     def __init__(self, x: float, y: float):
         self.x = x
         self.y = y
@@ -48,12 +52,18 @@ def get_total_size(obj_list, label):
         size = asizeof.asizeof(obj_list)
         print(f"[pympler] {label:>30}: {size/1024/1024:.2f} MB (deep size)")
     else:
-        summed = sum(sys.getsizeof(o) for o in obj_list) + sys.getsizeof(obj_list)
-        print(f"[sys.getsizeof] {label:>30}: {summed/1024/1024:.2f} MB (*shallow* size)")
+        summed = sum(sys.getsizeof(o)
+                     for o in obj_list) + sys.getsizeof(obj_list)
+        print(
+            f"[sys.getsizeof] {label:>30}: {summed/1024/1024:.2f} MB (*shallow* size)")
 
 
 def main():
-    print("\n--- Python Memory Management: __slots__ vs Standard Class ---\n")
+
+    print("─────────────────────────────────────")
+    print("Python Memory Management: __slots__ vs Standard Class")
+    print("─────────────────────────────────────")
+
     COUNT = 1_000_000
 
     t0 = perf_counter()
@@ -68,17 +78,24 @@ def main():
     get_total_size(optimized_objs, "OptimizedCoordinate x 1,000,000")
     print(f"  Creation time: {t3-t2:.2f}s\n")
 
-    print("\n--- Circular Reference & Garbage Collector Demo ---")
+    print("─────────────────────────────────────")
+    print("Circular Reference & Garbage Collector Demo")
+    print("─────────────────────────────────────")
     # Circular reference: Not freed by immediate reference counting
     from typing import Optional
+
     class Circular:
         def __init__(self):
-            self.friend: Optional["Circular"] = None  # type: ignore for forward reference
-    a = Circular(); b = Circular()
-    a.friend = b; b.friend = a  # Create cycle: a <-> b
+            # type: ignore for forward reference
+            self.friend: Optional["Circular"] = None
+    a = Circular()
+    b = Circular()
+    a.friend = b
+    b.friend = a  # Create cycle: a <-> b
     del a, b  # Reference count for each is nonzero due to cycle!
     unreachable = gc.collect()
-    print(f"  gc.collect() ran; unreachable objects found and cleaned: {unreachable}")
+    print(
+        f"  gc.collect() ran; unreachable objects found and cleaned: {unreachable}")
     # Refcounting cannot reclaim cycles. CPython's generational GC solves this.
 
     print("\n--- Technical Annotations ---")
@@ -98,6 +115,7 @@ not as soon as they're unreachable. V8 optimizes memory via "hidden classes"—v
 it locks down property names (attributes), reducing lookup and storage overhead, like a C struct or TypeScript interface.
 """
 ''')
+
 
 if __name__ == "__main__":
     main()
